@@ -38,12 +38,12 @@ def set_general_arguments(parser):
 
 def set_data_arguments(parser):
     data_arg = parser.add_argument_group('Data')
-    data_arg.add_argument('--dataset_name', choices=['world_cup'],
+    data_arg.add_argument('--dataset_name', choices=['world_cup', 'hockey'],
                           type=str, default='world_cup', help='dataset name')
     data_arg.add_argument('--coord_conv_template', type=str2bool,
                           default=True, help='replace redundant channels tp XY grids')
-    data_arg.add_argument('--template_path', type=str,
-                          default='./data/world_cup_template.png', help='playfield template image')
+    # data_arg.add_argument('--template_path', type=str,
+    #                       default='./data/world_cup_template.png', help='playfield template image')
     data_arg.add_argument('--need_single_image_normalization', type=str2bool,
                           default=True, help='normalize a single image')
 
@@ -55,8 +55,9 @@ def set_warp_arguments(parser):
 
 
 def set_dataset_paths(opt, global_config):
-    if opt.dataset_name == 'world_cup':
+    if opt.dataset_name == 'world_cup' or opt.dataset_name == 'hockey':
         opt.test_dataset_path = global_config[opt.dataset_name]['test_dataset']
+        opt.template_path = global_config[opt.dataset_name]['template']
     else:
         raise ValueError('unknown dataset_name: {0}'.format(opt.dataset_name))
     return opt

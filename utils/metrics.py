@@ -23,6 +23,11 @@ class IOU(object):
             self.template_height = 74
             self.frame_width = 256
             self.frame_height = 256
+        elif self.opt.dataset_name == 'hockey':
+            self.template_width = 1200
+            self.template_height = 521
+            self.frame_width = 256
+            self.frame_height = 256
         else:
             raise ValueError(
                 'unknown dataset name: {0}'.format(self.opt.dataset_name))

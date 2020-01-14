@@ -8,6 +8,11 @@ from torch.utils import data
 import imageio
 import tables
 
+# import numpy as np
+# import json
+# import cv2
+# import h5py
+
 from utils import utils, warp, image_utils
 
 
@@ -25,6 +30,8 @@ class AlignedDatasetFactory():
 
         if opt.dataset_name == 'world_cup':
             dset = WorldCupAlignedDataset(opt, dataset_type)
+        elif opt.dataset_name == 'hockey':
+            dset = HockeyAlignedDataset(opt, dataset_type)
         else:
             raise ValueError('unknown dataset: {0}'.format(opt.dataset_name))
         return dset
@@ -68,12 +75,23 @@ class AlignedDataset(data.Dataset, abc.ABC):
 
     def get_homography_by_index(self, index):
         homography = self.raw_data.root.homographies[index]
+        # if hasattr(self, 'raw_data.root'):
+        #     homography = self.raw_data.root.homographies[index]
+        # else:
+        #     homography = self.homographies[index]
+
         homography = utils.to_torch(homography)
         homography = homography / homography[2:3, 2:3]
+
         return homography
 
     def get_image_by_index(self, index):
         img = self.raw_data.root.frames[index]
+        # if hasattr(self, 'raw_data.root'):
+        #     img = self.raw_data.root.frames[index]
+        # else:
+        #     img = self.frames[index]
+
         img = img[..., [2, 1, 0]]
         img = img / 255.0
         img = utils.to_torch(img).permute(2, 0, 1)
@@ -94,6 +112,41 @@ class WorldCupDataset(abc.ABC):
         self.num_samples = len(self.raw_data.root.frames)
 
 
+class HockeyDataset(abc.ABC):
+    def load_h5_file(self, dataset_type):
+        if dataset_type == 'test':
+            self.dataset_path = self.opt.test_dataset_path
+        else:
+            raise ValueError('unknown dataset type:{0}'.format(dataset_type))
+
+        self.raw_data = tables.open_file(self.dataset_path, mode='r')
+        assert len(self.raw_data.root.frames) == len(
+            self.raw_data.root.homographies)
+        self.num_samples = len(self.raw_data.root.frames)
+
+        # homographies = []
+        # frames = []
+
+        # for val in self.raw_data.values():
+        #     homographies.append(np.array(list(val['homography'])))
+        #     frames.append(cv2.resize(cv2.imread(val['im']), (256, 256)) / 255.0)
+
+        # assert len(homographies) == len(frames)
+
+        # self.frames = frames
+        # self.homographies = homographies
+        # self.num_samples = len(frames)
+
+        # with h5py.File('file.hdf5', 'w') as data_file:
+        #     data_file.create_dataset('frames', data = frames)
+        #     data_file.create_dataset('homographies', data = homographies)
+
+
 class WorldCupAlignedDataset(WorldCupDataset, AlignedDataset):
+    def __init__(self, opt, dataset_type):
+        super().__init__(opt, dataset_type)
+
+
+class HockeyAlignedDataset(HockeyDataset, AlignedDataset):
     def __init__(self, opt, dataset_type):
         super().__init__(opt, dataset_type)
